@@ -36,7 +36,7 @@ class Perceptron:
   bias = 0
   avg_bias = 0
   c = 1
-  D = 0
+  D = 0 #Total document counts
   def classify(self, words):
     """ TODO
       'words' is a list of words to classify. Return 'pos' or 'neg' classification.
@@ -69,20 +69,23 @@ class Perceptron:
               return -1
 
   def makeWordVectors(self, words):
-    ret = {}
+    dic = {} # [Words:num of occurence]
+    idf = {}
+    tf_idf = {}
     for w in words:
-        if(ret.has_key(w)):
-            ret[w] += 1
+        if(dic.has_key(w)):
+            dic[w] += 1
         else:
-            ret[w] = 1
-    for w in ret:
-        ret[w] = ret[w]/len(words) #tf
-        if(self.word_occurence.has_key(w)):
-            ret[w] = ret[w]*math.log(self.D/(1+self.word_occurence[w])) #idf
-        else:
-            ret[w] = ret[w]*math.log(self.D)
-    
-    return ret
+            dic[w] = 1
+
+    for key in dic:
+        idf[key] = 1
+        if(self.word_occurence.has_key(key)):
+            idf[key] += self.word_occurence[key]
+        idf[key]  = math.log(self.D/idf[key])
+        tf_idf[key] = (dic[key]/len(words))*idf[key]
+
+    return tf_idf
   
   def calFunctionOfX(self, word_vector):
     total_value = 0
@@ -109,8 +112,7 @@ class Perceptron:
       tmp = {}
 
       for w in words:
-        if(tmp.has_key(w) == False):
-            tmp[w] = 1
+        tmp[w] = 1
       for key in tmp:
         if(self.word_occurence.has_key(key)):
             self.word_occurence[key] += 1
@@ -128,9 +130,7 @@ class Perceptron:
     """
     # Write code here
     y = self.isPositive(klass)
-    self.calWordsOccurence(words)
     word_vector = self.makeWordVectors(words)
-
     total_value = self.calFunctionOfX(word_vector)
     self.updateWeights(y, self.isPositive(total_value), word_vector)
 
@@ -143,9 +143,13 @@ class Perceptron:
       * TODO 
       * use weight averages instead of final iteration weights
       """
+      #Precalculate the words occurences in the whole dataset
+      for example in split.train:
+          words = example.words
+          self.calWordsOccurence(words)
+
+      self.D = len(split.train)
       for _ in range(iterations):
-        self.D = len(split.train)
-        #self.word_occurence.clear()
         for example in split.train:
             words = example.words
             self.addExample(example.klass, words)
