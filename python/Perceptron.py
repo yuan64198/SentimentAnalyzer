@@ -1,3 +1,4 @@
+from __future__ import division  
 import sys
 import getopt
 import os
@@ -31,27 +32,25 @@ class Perceptron:
 
   weights = {}
   avg_weights = {}
+  word_occurence = {}
   bias = 0
   avg_bias = 0
   c = 1
+  D = 0
   def classify(self, words):
     """ TODO
       'words' is a list of words to classify. Return 'pos' or 'neg' classification.
     """
 
     # Write code here
-    word_vectors = {}
-    total_value = 0
-    for w in words:
-        if(word_vectors.has_key(w)):
-            word_vectors[w] += 1
-        else:
-            word_vectors[w] = 0
+    word_vector = self.makeWordVectors(words)
 
-    for key in word_vectors:
+    total_value = 0
+    
+    for key in word_vector:
         if(self.weights.has_key(key) == True):
-            total_value += self.weights[w]*word_vectors[w]-self.avg_weights[w]/self.c
-    #print(total_value)
+            total_value += self.weights[key]*word_vector[key]-self.avg_weights[key]/self.c
+    print(total_value)
     total_value += self.bias - self.avg_bias/self.c
     
     if(total_value > 0): return 'pos'
@@ -75,7 +74,14 @@ class Perceptron:
         if(ret.has_key(w)):
             ret[w] += 1
         else:
-            ret[w] = 1 
+            ret[w] = 1
+    for w in ret:
+        ret[w] = ret[w]/len(words) #tf
+        if(self.word_occurence.has_key(w)):
+            ret[w] = ret[w]*math.log(self.D/(1+self.word_occurence[w])) #idf
+        else:
+            ret[w] = ret[w]*math.log(self.D)
+    
     return ret
   
   def calFunctionOfX(self, word_vector):
@@ -97,6 +103,20 @@ class Perceptron:
         self.bias += y
         self.avg_bias += self.c*y
     self.c += 1
+
+#if a word occures in the sentence, self.word_occurence[word]+1
+  def calWordsOccurence(self, words):
+      tmp = {}
+
+      for w in words:
+        if(tmp.has_key(w) == False):
+            tmp[w] = 1
+      for key in tmp:
+        if(self.word_occurence.has_key(key)):
+            self.word_occurence[key] += 1
+        else:
+            self.word_occurence[key] = 1
+
   def addExample(self, klass, words):
     """
      * TODO
@@ -107,8 +127,10 @@ class Perceptron:
      * Returns nothing
     """
     # Write code here
-    y = self.isPositive(klass) 
+    y = self.isPositive(klass)
+    self.calWordsOccurence(words)
     word_vector = self.makeWordVectors(words)
+
     total_value = self.calFunctionOfX(word_vector)
     self.updateWeights(y, self.isPositive(total_value), word_vector)
 
@@ -122,6 +144,8 @@ class Perceptron:
       * use weight averages instead of final iteration weights
       """
       for _ in range(iterations):
+        self.D = len(split.train)
+        #self.word_occurence.clear()
         for example in split.train:
             words = example.words
             self.addExample(example.klass, words)
