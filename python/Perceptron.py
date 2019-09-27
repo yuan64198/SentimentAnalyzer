@@ -4,6 +4,7 @@ import getopt
 import os
 import math
 import operator
+from random import shuffle
 
 class Perceptron:
   class TrainSplit:
@@ -50,7 +51,7 @@ class Perceptron:
     for key in vector:
         if(self.weights.has_key(key) == True):
             total_value += self.weights[key]*vector[key]-self.avg_weights[key]/self.c
-    print(total_value)
+    #print(total_value)
     total_value += self.bias - self.avg_bias/self.c
     
     if(total_value > 0): return 'pos'
@@ -149,6 +150,7 @@ class Perceptron:
       self.calWordsOccurence(split.train)
 
       self.D = len(split.train)
+      shuffle(split.train)
       for _ in range(iterations):
         for example in split.train:
             words = example.words
