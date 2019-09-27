@@ -43,13 +43,13 @@ class Perceptron:
     """
 
     # Write code here
-    word_vector = self.makeWordVectors(words)
+    vector = self.makeSentenceVectors(words)
 
     total_value = 0
     
-    for key in word_vector:
+    for key in vector:
         if(self.weights.has_key(key) == True):
-            total_value += self.weights[key]*word_vector[key]-self.avg_weights[key]/self.c
+            total_value += self.weights[key]*vector[key]-self.avg_weights[key]/self.c
     print(total_value)
     total_value += self.bias - self.avg_bias/self.c
     
@@ -68,7 +68,7 @@ class Perceptron:
           else:
               return -1
 
-  def makeWordVectors(self, words):
+  def makeSentenceVectors(self, words):
     dic = {} # [Words:num of occurence]
     idf = {}
     tf_idf = {}
@@ -82,42 +82,44 @@ class Perceptron:
         idf[key] = 1
         if(self.word_occurence.has_key(key)):
             idf[key] += self.word_occurence[key]
-        idf[key]  = math.log(self.D/idf[key])
+        idf[key]  = math.log10(self.D/idf[key])
         tf_idf[key] = (dic[key]/len(words))*idf[key]
 
     return tf_idf
   
-  def calFunctionOfX(self, word_vector):
+  def calFunctionOfX(self, vector):
     total_value = 0
-    for key in word_vector:
+    for key in vector:
         if(self.weights.has_key(key)==False):
             self.weights[key] = 0
         if(self.avg_weights.has_key(key)==False):
             self.avg_weights[key] = 0
-        total_value += word_vector[key]*self.weights[key]
+        total_value += vector[key]*self.weights[key]
     total_value += self.bias
     return total_value
 
-  def updateWeights(self, y, y_hat, word_vector):
+  def updateWeights(self, y, y_hat, vector):
     if(y != y_hat):
-        for key in word_vector:
-            self.weights[key] += (y-y_hat)*word_vector[key]
-            self.avg_weights[key] += self.c*(y-y_hat)*word_vector[key]
+        for key in vector:
+            self.weights[key] += (y-y_hat)*vector[key]
+            self.avg_weights[key] += self.c*(y-y_hat)*vector[key]
         self.bias += y
         self.avg_bias += self.c*y
     self.c += 1
 
 #if a word occures in the sentence, self.word_occurence[word]+1
-  def calWordsOccurence(self, words):
-      tmp = {}
-
-      for w in words:
-        tmp[w] = 1
-      for key in tmp:
-        if(self.word_occurence.has_key(key)):
-            self.word_occurence[key] += 1
-        else:
-            self.word_occurence[key] = 1
+  def calWordsOccurence(self, train):
+      
+      for example in train:
+        words = example.words
+        tmp = {}
+        for w in words:
+          tmp[w] = 1
+        for key in tmp:
+          if(self.word_occurence.has_key(key)):
+              self.word_occurence[key] += 1
+          else:
+              self.word_occurence[key] = 1
 
   def addExample(self, klass, words):
     """
@@ -130,9 +132,9 @@ class Perceptron:
     """
     # Write code here
     y = self.isPositive(klass)
-    word_vector = self.makeWordVectors(words)
-    total_value = self.calFunctionOfX(word_vector)
-    self.updateWeights(y, self.isPositive(total_value), word_vector)
+    vector = self.makeSentenceVectors(words)
+    total_value = self.calFunctionOfX(vector)
+    self.updateWeights(y, self.isPositive(total_value), vector)
 
     pass
   
@@ -144,9 +146,7 @@ class Perceptron:
       * use weight averages instead of final iteration weights
       """
       #Precalculate the words occurences in the whole dataset
-      for example in split.train:
-          words = example.words
-          self.calWordsOccurence(words)
+      self.calWordsOccurence(split.train)
 
       self.D = len(split.train)
       for _ in range(iterations):
