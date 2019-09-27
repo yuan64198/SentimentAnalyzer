@@ -26,7 +26,13 @@ class Perceptron:
   def __init__(self):
     """Perceptron initialization"""
     self.numFolds = 10
-
+    self.D = 0
+    self.c = 1
+    self.weights = {}
+    self.avg_weights = {}
+    self.word_occurence = {}
+    self.bias = 0
+    self.avg_bias = 0
   #############################################################################
   # TODO TODO TODO TODO TODO 
   # Implement the Perceptron classifier 
@@ -50,7 +56,7 @@ class Perceptron:
     
     for key in vector:
         if(self.weights.has_key(key) == True):
-            total_value += self.weights[key]*vector[key]-self.avg_weights[key]/self.c
+            total_value += (self.weights[key]-self.avg_weights[key]/self.c)*vector[key]
     #print(total_value)
     total_value += self.bias - self.avg_bias/self.c
     
@@ -102,8 +108,8 @@ class Perceptron:
   def updateWeights(self, y, y_hat, vector):
     if(y != y_hat):
         for key in vector:
-            self.weights[key] += *(y-y_hat)*vector[key]
-            self.avg_weights[key] += *self.c*(y-y_hat)*vector[key]
+            self.weights[key] += (y-y_hat)*vector[key]
+            self.avg_weights[key] += self.c*(y-y_hat)*vector[key]
         self.bias += y
         self.avg_bias += self.c*y
     self.c += 1
