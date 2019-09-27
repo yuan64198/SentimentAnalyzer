@@ -95,15 +95,15 @@ class Perceptron:
             self.weights[key] = 0
         if(self.avg_weights.has_key(key)==False):
             self.avg_weights[key] = 0
-        total_value += vector[key]*self.weights[key]
-    total_value += self.bias
+        total_value += vector[key]*self.weights[key] - self.avg_weights[key]/self.c
+    total_value += self.bias - self.avg_bias/self.c
     return total_value
 
   def updateWeights(self, y, y_hat, vector):
     if(y != y_hat):
         for key in vector:
-            self.weights[key] += (y-y_hat)*vector[key]
-            self.avg_weights[key] += self.c*(y-y_hat)*vector[key]
+            self.weights[key] += *(y-y_hat)*vector[key]
+            self.avg_weights[key] += *self.c*(y-y_hat)*vector[key]
         self.bias += y
         self.avg_bias += self.c*y
     self.c += 1
@@ -150,6 +150,7 @@ class Perceptron:
       self.calWordsOccurence(split.train)
 
       self.D = len(split.train)
+      
       shuffle(split.train)
       for _ in range(iterations):
         for example in split.train:
