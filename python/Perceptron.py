@@ -40,21 +40,21 @@ class Perceptron:
     """
 
     # Write code here
-    words_occurences = {}
-    wx = 0
+    word_vectors = {}
+    total_value = 0
     for w in words:
-        if(words_occurences.has_key(w)):
-            words_occurences[w] += 1
+        if(word_vectors.has_key(w)):
+            word_vectors[w] += 1
         else:
-            words_occurences[w] = 0
+            word_vectors[w] = 0
 
-    for key in words_occurences:
+    for key in word_vectors:
         if(self.weights.has_key(key) == True):
-            wx += self.weights[w]*words_occurences[w]#-self.avg_weights[w]/self.c
-    #print(wx)
-    wx += self.bias# - self.avg_bias/self.c
+            total_value += self.weights[w]*word_vectors[w]-self.avg_weights[w]/self.c
+    #print(total_value)
+    total_value += self.bias - self.avg_bias/self.c
     
-    if(wx > 0): return 'pos'
+    if(total_value > 0): return 'pos'
     else: return 'neg'
 
   def isPositive(self, y):
@@ -69,6 +69,34 @@ class Perceptron:
           else:
               return -1
 
+  def makeWordVectors(self, words):
+    ret = {}
+    for w in words:
+        if(ret.has_key(w)):
+            ret[w] += 1
+        else:
+            ret[w] = 1 
+    return ret
+  
+  def calFunctionOfX(self, word_vector):
+    total_value = 0
+    for key in word_vector:
+        if(self.weights.has_key(key)==False):
+            self.weights[key] = 0
+        if(self.avg_weights.has_key(key)==False):
+            self.avg_weights[key] = 0
+        total_value += word_vector[key]*self.weights[key]
+    total_value += self.bias
+    return total_value
+
+  def updateWeights(self, y, y_hat, word_vector):
+    if(y != y_hat):
+        for key in word_vector:
+            self.weights[key] += (y-y_hat)*word_vector[key]
+            self.avg_weights[key] += self.c*(y-y_hat)*word_vector[key]
+        self.bias += y
+        self.avg_bias += self.c*y
+    self.c += 1
   def addExample(self, klass, words):
     """
      * TODO
@@ -78,33 +106,11 @@ class Perceptron:
      * in the Perceptron class.
      * Returns nothing
     """
-    wx=0
-    words_occurences = {}
-    y = self.isPositive(klass) 
-    for w in words:
-        if(words_occurences.has_key(w)):
-            words_occurences[w] += 1
-        else:
-            words_occurences[w] = 1 
-
-    for key in words_occurences:
-        if(self.weights.has_key(key)==False):
-            self.weights[key] = 0
-        if(self.avg_weights.has_key(key)==False):
-            self.avg_weights[key] = 0
-        wx += words_occurences[key]*self.weights[key]
-    wx += self.bias
-
-
-    if(y != self.isPositive(wx)):
-        for key in words_occurences:
-            self.weights[key] += (y-self.isPositive(wx))*words_occurences[key]
-            self.avg_weights[key] += self.c*(y-self.isPositive(wx+self.bias))*words_occurences[key]
-        # self.bias += y-self.isPositive(wx)
-        self.avg_bias += self.c*y
-    self.c += 1
-
     # Write code here
+    y = self.isPositive(klass) 
+    word_vector = self.makeWordVectors(words)
+    total_value = self.calFunctionOfX(word_vector)
+    self.updateWeights(y, self.isPositive(total_value), word_vector)
 
     pass
   
